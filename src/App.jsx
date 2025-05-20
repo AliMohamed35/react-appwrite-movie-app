@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useDebounce } from 'react-use'
 import Search from "./components/Search";
 import Component from "./components/Spinner";
-import MovieCard from "./components/movieCard";
+import MovieCard from "./components/MovieCard";
 import { updateSearchCount, getTrendingMovies } from "./appwrite";
 
 const API_BASE_URL = 'https://api.themoviedb.org/3';
