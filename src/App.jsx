@@ -20,7 +20,7 @@ const API_OPTIONS = {
 const App = () => {
   // HOOKS
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-  const [searchTerm, setSearchTerm] = useState();
+  const [searchTerm, setSearchTerm] = useState('');
   const [errorMessage, setErrorMessage] = useState(null);
 
   const [movieList, setMovieList] = useState([]);
@@ -36,32 +36,28 @@ const App = () => {
 
   const fetchMovies = async (query = '') => {
     setIsLoading(true);
-    setErrorMessage('');
+    setErrorMessage(null);
 
     try {
 
-      const endPoint = query ? `${API_BASE_URL}/search/movie?query=${encodeURIComponent(query)}`
+      const endPoint = query
+        ? `${API_BASE_URL}/search/movie?query=${encodeURIComponent(query)}&include_adult=false`
         : `${API_BASE_URL}/discover/movie?sort_by=popularity.desc`;
       const response = await fetch(endPoint, API_OPTIONS); // fetch built in func in JS to make https requests.
       // removing the await will result in returning a promise object without the real response
 
       if (!response.ok) {
-        throw new Error('Failed')
+        throw new Error(`Failed to fetch: ${response.status}`)
 
       } else {
         const data = await response.json();
 
-        if (data.response === 'false') {
-          setErrorMessage(data.error || 'Failed to fetch data')
-          setMovieList([]);
-          return; // means exit the function
+        const results = Array.isArray(data.results) ? data.results : [];
 
-        } else {
-          setMovieList(data.results || []);
+        setMovieList(results);
 
-          if (query ?? data.results.length > 0) {
-            await updateSearchCount(query, data.results[0]);
-          }
+        if (query && results.length > 0) {
+          await updateSearchCount(query, results[0]);
         }
       }
 
@@ -78,9 +74,10 @@ const App = () => {
   const loadTrendingMovies = async () => {
     try {
       const movies = await getTrendingMovies();
-      setTrendingMovies(movies)
+      setTrendingMovies(Array.isArray(movies) ? movies : [])
+      setTrendingError(null)
     } catch (error) {
-      setTrendingError(error)
+      setTrendingError(error instanceof Error ? error.message : 'Failed to load trending movies')
     }
   }
 
@@ -98,7 +95,7 @@ const App = () => {
 
       <div className="wrapper">
         <header>
-          <img src="./hero-img.png" alt="hero bg" />
+          <img src="/hero-img.png" alt="hero bg" />
           <h1>Find the <span className="text-gradient">Movies</span> you like without the hassle</h1>
           <Search searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
         </header>
@@ -108,7 +105,8 @@ const App = () => {
             <h2>Trending Movies</h2>
 
             <ul>
-              {trendingError ? (<p className="text-red-500">{trendingError}</p>) : trendingMovies.map((movie, index) => (<li key={movie.$id}>
+              {trendingError ? (<p className="text-red-500">{trendingError}</p>) : trendingMovies.map((movie, index) => (<li key={movie.$id}
+              >
                 <p>{index + 1}</p>
                 <img src={movie.poster_url} alt={movie.title} />
               </li>))}

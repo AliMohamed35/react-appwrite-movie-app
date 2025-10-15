@@ -8,8 +8,6 @@ const client = new Client()
     .setEndpoint('https://fra.cloud.appwrite.io/v1')
     .setProject(PROJECT_ID);
 
-console.log(client);
-
 
 const database = new Databases(client);
 
@@ -36,7 +34,7 @@ export const updateSearchCount = async (searchTerm, movie) => {
             })
         }
     } catch (error) {
-        console.log(error);
+        console.error('updateSearchCount error:', error);
     }
 }
 
@@ -47,9 +45,10 @@ export const getTrendingMovies = async () => {
             Query.orderDesc('count')
         ])
 
-        return result.documents;
+        return result.documents || [];
     }
     catch (error) {
-        console.log(error);
+        console.error('getTrendingMovies error:', error);
+        throw error;
     }
 }
